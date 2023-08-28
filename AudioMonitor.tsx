@@ -7,11 +7,8 @@ import {
     Platform,
     FlatList,
 } from 'react-native';
-// import Sound from 'react-native-sound';
-
 
 import { AudioRecorder, AudioUtils } from 'react-native-audio';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -90,30 +87,8 @@ export const AudioMonitor = () => {
 
 
 
-    const finishRecording = async (didSucceed: any, filePath: any, fileSize: any) => {
+    const finishRecording = (didSucceed: any, filePath: any, fileSize: any) => {
         setFinished(didSucceed);
-
-        if (didSucceed) {
-            // Create a new recording object
-            const newRecording = {
-                path: filePath,
-                duration: currentTime,
-            };
-
-            // Retrieve existing recordings from AsyncStorage
-            const existingRecordings = await AsyncStorage.getItem('recordings');
-            const recordings = existingRecordings ? JSON.parse(existingRecordings) : [];
-
-            // Add the new recording to the list of recordings
-            recordings.push(newRecording);
-
-            // Store the updated list of recordings back in AsyncStorage
-            await AsyncStorage.setItem('recordings', JSON.stringify(recordings));
-
-            // Update the state to reflect the new recordings
-            setRecordings(recordings);
-        }
-
         console.log(
             `Finished recording of duration ${currentTime} seconds at path: ${filePath} and size of ${fileSize || 0} bytes`
         );
