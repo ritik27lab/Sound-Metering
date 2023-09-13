@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Pressable,
   SafeAreaView,
@@ -14,11 +14,13 @@ import RNSoundLevel from 'react-native-sound-level'
 import {
   Colors
 } from 'react-native/Libraries/NewAppScreen';
-import { AudioMonitor } from './AudioMonitor';
+import { AudioMonitor } from './src/AudioMonitor';
+import { BottomModal } from './src/BottomModal';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
+  const [modalVisible, setModalVisible] = useState(false);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -61,6 +63,7 @@ function App(): JSX.Element {
     <View style={{ flex: 1 }}>
 
       <AudioMonitor />
+      <BottomModal />
 
     </View>
   );

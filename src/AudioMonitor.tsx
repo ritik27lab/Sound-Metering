@@ -5,31 +5,30 @@ import {
     View,
     TouchableOpacity,
     Platform,
-    FlatList,
+    Dimensions,
 } from 'react-native';
-
 import { AudioRecorder, AudioUtils } from 'react-native-audio';
-
+import { LineChart } from 'react-native-chart-kit';
+import { Svg, Path } from 'react-native-svg';
 
 
 export const AudioMonitor = () => {
-    let soundData;
+    const { width, height } = Dimensions.get('window');
+
     const [currentTime, setCurrentTime] = useState(0.0);
     const [recording, setRecording] = useState(false);
     const [paused, setPaused] = useState(false);
     const [stoppedRecording, setStoppedRecording] = useState(false);
     const [decibels, setDecibels] = useState(0)
     const [currentMetering, setCurrentMetering] = useState(-54.88); // Initialize with a default value
-
+    const [data, setData] = useState<any>()
     const [finished, setFinished] = useState(false);
     const [audioPath, setAudioPath] = useState(
         AudioUtils.DocumentDirectoryPath + '/test.aac'
     );
-
     const [hasPermission, setHasPermission] = useState(undefined);
-    const [recordings, setRecordings] = useState([]); // State variable for storing recordings
 
-
+    let path: any;
     useEffect(() => {
         const prepareRecordingPath = (audioPath: any) => {
             AudioRecorder.prepareRecordingAtPath(audioPath, {
@@ -45,29 +44,38 @@ export const AudioMonitor = () => {
         const requestAudioPermission = async () => {
             const isAuthorized: any = await AudioRecorder.requestAuthorization();
             setHasPermission(isAuthorized);
-
             if (!isAuthorized) return;
-
             prepareRecordingPath(audioPath);
-
-
             AudioRecorder.onProgress = (data: any) => {
-                // Calculate dB level from the audio data
+
+
+
+
+
+
+
+
+
                 console.log(data)
+                setData(data)
+                // if (!Array.isArray(data) || data.length === 0) {
+                // setData(data);
+                function convertToPositiveDB(valueInDBFS: any) {
+                    return -valueInDBFS;
+                }
+                const loudnessCurrentMetering = convertToPositiveDB(data?.currentMetering);
+
+                const loudnessCurrentPeakMetering = convertToPositiveDB(data?.currentPeakMetering);
+
+                console.log("Loudness from currentMetering:", loudnessCurrentMetering.toFixed(2), "dB");
+                console.log("Loudness from currentPeakMetering:", loudnessCurrentPeakMetering.toFixed(2), "dB");
                 // );
-                let db: any = Math.floor(data.currentMetering);
-
-                soundData = {
-                    datasets: [
-                        {
-                            data: [data?.currentTime, data?.currentPeakMetering], // Use your currentMetering and currentPeakMetering data
-                        },
-                    ],
-                };
+                let db: any = data.currentMetering
 
 
 
-                setDecibels(db)
+
+                setDecibels(loudnessCurrentMetering)
                 setCurrentMetering(db)
                 setCurrentTime(Math.floor(data.currentTime));
             };
@@ -80,11 +88,8 @@ export const AudioMonitor = () => {
         };
 
         requestAudioPermission();
+
     }, []);
-
-
-
-
 
 
     const finishRecording = (didSucceed: any, filePath: any, fileSize: any) => {
@@ -182,6 +187,17 @@ export const AudioMonitor = () => {
         }
     };
 
+    const AudioVisualization = ({ audioData }) => {
+        if (!Array.isArray(audioData) || audioData.length === 0) {
+            // Handle the case where audioData is not valid
+            return (
+                <View>
+                    {/* You can display a placeholder or error message here */}
+                    <Text>No audio data available</Text>
+                </View>
+            );
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -190,8 +206,14 @@ export const AudioMonitor = () => {
                 {renderButton('STOP', stop, 'yes')}
                 {renderPauseButton(paused ? resume : pause, paused)}
                 <Text style={styles.progressText}>{currentTime}s</Text>
-                <Text style={styles.progressText}>{decibels} dB</Text>
-                {/* <View style={[styles.bar, { height: mapMeteringToHeight(currentMetering) + '%' }]} /> */}
+                <Text style={styles.progressText}>{decibels.toFixed(1)} dB</Text>
+                <AudioVisualization audioData={data} />
+
+                <Svg width={width} height={50}>
+                    <Path d={path} fill="none" stroke="blue" strokeWidth="2" />
+                </Svg>
+
+
 
             </View>
 
